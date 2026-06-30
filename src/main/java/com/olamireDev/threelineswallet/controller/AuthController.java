@@ -1,0 +1,30 @@
+package com.olamireDev.threelineswallet.controller;
+
+import com.olamireDev.threelineswallet.data.dto.ApiResponse;
+import com.olamireDev.threelineswallet.data.dto.CreateUserRequestDTO;
+import com.olamireDev.threelineswallet.data.dto.LoginRequestDTO;
+import com.olamireDev.threelineswallet.data.dto.LoginResponseDTO;
+import com.olamireDev.threelineswallet.service.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> register(@RequestBody CreateUserRequestDTO requestDTO) {
+        return  ResponseEntity.ok(ApiResponse.success(authService.createUser(requestDTO)));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<LoginResponseDTO>> login(@RequestBody LoginRequestDTO requestDTO) {
+        return  ResponseEntity.ok(ApiResponse.success(authService.login(requestDTO)));
+    }
+
+}
