@@ -28,9 +28,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints (if any)
                         .requestMatchers(
-                                "/api/auth/**")
+                                "/api/v1/auth/**")
                         .permitAll()
                         .anyRequest()
                         .authenticated()
@@ -61,4 +60,5 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

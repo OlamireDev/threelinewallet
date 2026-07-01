@@ -14,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 
 import static com.olamireDev.threelineswallet.constants.ApplicationConstants.USERNAME;
@@ -29,7 +30,6 @@ public class AuthService {
 
     private final UserRepository userRepo;
 
-    @Transactional
     public LoginResponseDTO createUser(CreateUserRequestDTO requestDTO) {
         try{
             log.info("Onboarding user: {}", requestDTO.getEmail());
@@ -50,7 +50,7 @@ public class AuthService {
 
             return LoginResponseDTO.builder()
                     .token(tokenPair.getFirst())
-                    .expireOn(LocalDateTime.from(tokenPair.getSecond().toInstant()))
+                    .expireOn(LocalDateTime.ofInstant(tokenPair.getSecond().toInstant(), ZoneId.systemDefault()))
                     .name(newUser.getName())
                     .build();
         }catch (Exception e){
@@ -79,7 +79,7 @@ public class AuthService {
 
             return LoginResponseDTO.builder()
                     .token(tokenPair.getFirst())
-                    .expireOn(LocalDateTime.from(tokenPair.getSecond().toInstant()))
+                    .expireOn(LocalDateTime.ofInstant(tokenPair.getSecond().toInstant(), ZoneId.systemDefault()))
                     .name(user.getName())
                     .build();
         }catch (Exception e){
