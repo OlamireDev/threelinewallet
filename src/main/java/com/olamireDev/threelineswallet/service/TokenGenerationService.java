@@ -35,13 +35,13 @@ public class TokenGenerationService {
                 expiration);
     }
 
-    private Claims decodeToken(String token){
+    public Claims decodeToken(String token){
         log.info("Token: {}", token);
         var key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
         var claims = Jwts.parser()
                 .verifyWith(key)
                 .build()
-                .parseEncryptedClaims(token)
+                .parseSignedClaims(token)
                 .getPayload();
         log.info("Claims: {}", claims);
         if(claims.getIssuer().equalsIgnoreCase(jwtConfig.getIssuer())) {
