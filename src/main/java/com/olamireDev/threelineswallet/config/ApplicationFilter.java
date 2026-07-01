@@ -23,7 +23,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @RequiredArgsConstructor
 @Slf4j
-public class ApplicationFilter implements Filter {
+public class ApplicationFilter extends OncePerRequestFilter {
 
     private final TokenGenerationService tokenGenerationService;
 
@@ -33,22 +33,27 @@ public class ApplicationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         var servletRequest = (HttpServletRequest) request;
         var servletResponse = (HttpServletResponse) response;
-        log.info("Filtering request {}", servletRequest.getRequestURI());
-        if(excludeUrls.contains(servletRequest.getRequestURI())) {
-            chain.doFilter(request, response);
+
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        log.info("Filtering request {}", request.getRequestURI());
+        if(excludeUrls.contains(request.getRequestURI())) {
+            filterChain.doFilter(request, response);
             return;
         }
-        var authHeader = servletRequest.getHeader(AUTHORIZATION);
+        var authHeader = response.getHeader(AUTHORIZATION);
         if(StringUtils.isBlank(authHeader)){
             log.error("Authorization header is empty");
-            servletResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
         var tokenValue = authHeader.replace("Bearer ", "");
         var claims = tokenGenerationService.decodeToken(tokenValue);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(claims.getSubject(), List.of()));
-        log.info("Authentication Success {}", servletRequest.getRequestURI());
-        chain.doFilter(request, response);
+        log.info("Authentication Success {}", request.getRequestURI());
+        filterChain.doFilter(request, response);
     }
 
 }

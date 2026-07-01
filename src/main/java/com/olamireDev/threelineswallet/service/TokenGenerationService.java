@@ -44,7 +44,7 @@ public class TokenGenerationService {
                 .parseSignedClaims(token)
                 .getPayload();
         log.info("Claims: {}", claims);
-        if(claims.getIssuer().equalsIgnoreCase(jwtConfig.getIssuer())) {
+        if(!claims.getIssuer().equalsIgnoreCase(jwtConfig.getIssuer())) {
             log.error("Invalid issuer: {}", claims.getIssuer());
             throw new AuthException("Invalid Issuer");
         }

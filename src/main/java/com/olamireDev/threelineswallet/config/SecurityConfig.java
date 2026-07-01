@@ -31,25 +31,26 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/v1/auth/**")
+                .securityMatcher("/api/v1/auth/**",
+                        "/error")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
         return http.build();
     }
 
-//    @Bean
-//    @Order(2)
-//    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) throws Exception {
-//        var applicationFilter = new ApplicationFilter(tokenGenerationService);
-//        http
-//                .securityMatcher("/**")
-//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-//                .csrf(AbstractHttpConfigurer::disable)
-//                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-//                .addFilterAfter(applicationFilter, BasicAuthenticationFilter.class);
-//        return http.build();
-//    }
+    @Bean
+    @Order(2)
+    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) throws Exception {
+        var applicationFilter = new ApplicationFilter(tokenGenerationService);
+        http
+                .securityMatcher("/**")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .addFilterAfter(applicationFilter, BasicAuthenticationFilter.class);
+        return http.build();
+    }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {

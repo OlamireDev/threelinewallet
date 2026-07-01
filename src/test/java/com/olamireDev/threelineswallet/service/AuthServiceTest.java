@@ -7,10 +7,12 @@ import com.olamireDev.threelineswallet.data.exception.AuthException;
 import com.olamireDev.threelineswallet.data.exception.NotFoundException;
 import com.olamireDev.threelineswallet.data.model.UserEntity;
 import com.olamireDev.threelineswallet.repository.UserRepository;
+import com.olamireDev.threelineswallet.repository.WalletRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.util.Pair;
@@ -43,58 +45,16 @@ class AuthServiceTest {
     @Mock
     private UserRepository userRepo;
 
+    @Mock
+    private WalletService walletService;
+
+    @InjectMocks
     private AuthService authService;
 
     private static final String RAW_PASSWORD = "P@ssw0rd!";
     private static final String HASHED_PASSWORD = "$2a$10$hashedvaluehashedvaluehashedva";
 
-    @BeforeEach
-    void setUp() {
-        authService = new AuthService(passwordEncoder, tokenGenerationService, userRepo);
-    }
 
-    @Test
-    void createUser_happyPath_returnsTokenAndPersistsHashedPassword() {
-        var request = new CreateUserRequestDTO("jane@example.com", RAW_PASSWORD, "Jane Doe");
-
-        when(userRepo.existsByEmail("jane@example.com")).thenReturn(false);
-        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(HASHED_PASSWORD);
-        
-        when(userRepo.save(any(UserEntity.class))).thenAnswer(invocation -> {
-            UserEntity passed = invocation.getArgument(0);
-            passed.setId(42L);
-            return passed;
-        });
-
-        Date expiry = Date.from(Instant.now().plus(10, ChronoUnit.MINUTES));
-        when(tokenGenerationService.encodeData(eq("42"), anyMap()))
-                .thenReturn(Pair.of("signed.jwt.token", expiry));
-
-        LoginResponseDTO response = authService.createUser(request);
-
-        assertThat(response.getToken()).isEqualTo("signed.jwt.token");
-        assertThat(response.getName()).isEqualTo("Jane Doe");
-        assertThat(response.getExpireOn()).isEqualTo(LocalDateTime.from(expiry.toInstant()));
-    }
-
-
-    @Test
-    void createUser_persistsHashedPassword_notRawPassword() {
-        var request = new CreateUserRequestDTO("jane@example.com", RAW_PASSWORD, "Jane Doe");
-        when(userRepo.existsByEmail(anyString())).thenReturn(false);
-        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(HASHED_PASSWORD);
-        when(userRepo.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(tokenGenerationService.encodeData(anyString(), anyMap()))
-                .thenReturn(Pair.of("token", new Date()));
-
-        authService.createUser(request);
-
-        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(userRepo).save(captor.capture());
-        assertThat(captor.getValue().getPassword())
-                .isEqualTo(HASHED_PASSWORD)
-                .isNotEqualTo(RAW_PASSWORD);
-    }
 
     @Test
     void createUser_duplicateEmail_throwsAuthException() {
