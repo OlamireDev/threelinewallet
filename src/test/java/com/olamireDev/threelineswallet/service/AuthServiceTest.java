@@ -7,8 +7,6 @@ import com.olamireDev.threelineswallet.data.exception.AuthException;
 import com.olamireDev.threelineswallet.data.exception.NotFoundException;
 import com.olamireDev.threelineswallet.data.model.UserEntity;
 import com.olamireDev.threelineswallet.repository.UserRepository;
-import com.olamireDev.threelineswallet.repository.WalletRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,7 +17,6 @@ import org.springframework.data.util.Pair;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
@@ -43,10 +40,10 @@ class AuthServiceTest {
     private TokenGenerationService tokenGenerationService;
 
     @Mock
-    private UserRepository userRepo;
+    private WalletService walletService;
 
     @Mock
-    private WalletService walletService;
+    private UserRepository userRepo;
 
     @InjectMocks
     private AuthService authService;
@@ -54,6 +51,28 @@ class AuthServiceTest {
     private static final String RAW_PASSWORD = "P@ssw0rd!";
     private static final String HASHED_PASSWORD = "$2a$10$hashedvaluehashedvaluehashedva";
 
+
+    @Test
+    void createUser_persistsHashedPassword_notRawPassword() {
+        var request = new CreateUserRequestDTO("jane@example.com", RAW_PASSWORD, "Jane Doe");
+        when(userRepo.existsByEmail(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(RAW_PASSWORD)).thenReturn(HASHED_PASSWORD);
+        when(userRepo.save(any(UserEntity.class))).thenAnswer(inv -> {
+            UserEntity passed = inv.getArgument(0);
+            passed.setId(99L);
+            return passed;
+        });
+        when(tokenGenerationService.encodeData(anyString(), anyMap()))
+                .thenReturn(Pair.of("token", new Date()));
+
+        authService.createUser(request);
+
+        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepo).save(captor.capture());
+        assertThat(captor.getValue().getPassword())
+                .isEqualTo(HASHED_PASSWORD)
+                .isNotEqualTo(RAW_PASSWORD);
+    }
 
 
     @Test
@@ -142,7 +161,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_calledTwice_returnsDistinctTokensAndExpiries() throws InterruptedException {
+    void login_calledTwice_returnsDistinctTokensAndExpiries() {
         var request = new LoginRequestDTO("jane@example.com", RAW_PASSWORD);
         UserEntity existing = UserEntity.builder()
                 .id(1L).email("jane@example.com").password(HASHED_PASSWORD).name("Jane Doe").build();
