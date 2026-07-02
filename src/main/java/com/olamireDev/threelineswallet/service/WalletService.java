@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -21,7 +19,7 @@ public class WalletService {
 
     public void createDefaultWalletForUser(UserEntity user){
         try {
-            if(walletRepository.existsByForUser_Id(user.getId())){
+            if(walletRepository.existsByForUser_IdAndCurrency(user.getId(), Currency.NGN)){
                 log.info("Wallet already exists for user with id {}", user.getId());
                 return;
             }
@@ -38,9 +36,6 @@ public class WalletService {
     public GetWalletInfoResponseDTO getUserDefaultWalletInfo(){
         try {
             var userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
-            if(Objects.isNull(userId)){
-                throw new RuntimeException("User is not logged in");
-            }
             log.info("Getting wallet info for user with id {}", userId);
             var walletOpt = walletRepository.findWalletByForUser_IdAndCurrency(userId, Currency.NGN);
             if(walletOpt.isEmpty()){

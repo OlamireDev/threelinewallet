@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-
-import static com.olamireDev.threelineswallet.constants.ApplicationConstants.USERNAME;
 
 @Service
 @Slf4j
@@ -27,7 +24,7 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final TokenGenerationService tokenGenerationService;
+    private final UserSessionManagementService userSessionManagementService;
 
     private final WalletService walletService;
 
@@ -48,8 +45,7 @@ public class AuthService {
                     .build();
             newUser = userRepo.save(newUser);
 
-            var tokenPair = tokenGenerationService.encodeData(newUser.getId().toString(),
-                    Map.of(USERNAME.getValue(), newUser.getName()));
+            var tokenPair = userSessionManagementService.generateSessionToken(newUser.getId());
 
             UserEntity finalNewUser = newUser;
             CompletableFuture.runAsync(() ->
@@ -81,8 +77,7 @@ public class AuthService {
                 throw new NotFoundException(String.format("User %s not found", requestDTO.email()));
             }
 
-            var tokenPair = tokenGenerationService.encodeData(user.getId().toString(),
-                    Map.of(USERNAME.getValue(), user.getName()));
+            var tokenPair = userSessionManagementService.generateSessionToken(user.getId());
 
             return LoginResponseDTO.builder()
                     .token(tokenPair.getFirst())

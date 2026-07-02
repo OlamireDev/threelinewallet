@@ -1,6 +1,6 @@
 package com.olamireDev.threelineswallet.config;
 
-import com.olamireDev.threelineswallet.service.TokenGenerationService;
+import com.olamireDev.threelineswallet.service.UserSessionManagementService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Slf4j
 public class ApplicationFilter extends OncePerRequestFilter {
 
-    private final TokenGenerationService tokenGenerationService;
+    private final UserSessionManagementService userSessionManagementService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -33,7 +33,7 @@ public class ApplicationFilter extends OncePerRequestFilter {
             return;
         }
         var tokenValue = authHeader.replace("Bearer ", "");
-        var claims = tokenGenerationService.decodeToken(tokenValue);
+        var claims = userSessionManagementService.decodeSessionToken(tokenValue);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(claims.getSubject(),null,  List.of()));
         log.info("Authentication Success {}", request.getRequestURI());
         filterChain.doFilter(request, response);

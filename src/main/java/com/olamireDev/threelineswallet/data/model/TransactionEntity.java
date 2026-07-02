@@ -1,6 +1,6 @@
 package com.olamireDev.threelineswallet.data.model;
 
-import com.olamireDev.threelineswallet.constants.Currency;
+import com.olamireDev.threelineswallet.constants.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,33 +9,35 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "wallet",
-        uniqueConstraints = @UniqueConstraint(
-        name = "uk_wallet_user_currency",
-        columnNames = {"for_user_id", "currency"}
-))
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
-public class Wallet {
+@Entity
+@Table(name = "transactions")
+public class TransactionEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "for_user_id")
-    private UserEntity forUser;
+    private Wallet primaryWallet;
 
-    @Builder.Default
+    @ManyToOne
+    private Wallet secondaryWallet;
+
+    private BigDecimal amount;
+
     @Enumerated(EnumType.STRING)
-    private Currency currency =  Currency.NGN;
+    private TransactionType transactionType;
 
-    @Builder.Default
-    private BigDecimal balance = BigDecimal.ZERO;
+    @OneToOne
+    private TransactionEntity linkedTransaction;
+
+    @ManyToOne
+    private TransactionKeyEntity transactionKeyEntity;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
