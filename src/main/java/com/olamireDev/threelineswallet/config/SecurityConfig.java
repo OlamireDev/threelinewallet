@@ -1,6 +1,6 @@
 package com.olamireDev.threelineswallet.config;
 
-import com.olamireDev.threelineswallet.service.TokenGenerationService;
+import com.olamireDev.threelineswallet.service.UserSessionManagementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -39,8 +39,8 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) {
-        var applicationFilter = new ApplicationFilter(tokenGenerationService);
+    SecurityFilterChain apiChain(HttpSecurity http, UserSessionManagementService userSessionManagementService) {
+        var applicationFilter = new ApplicationFilter(userSessionManagementService);
         http
                 .securityMatcher("/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

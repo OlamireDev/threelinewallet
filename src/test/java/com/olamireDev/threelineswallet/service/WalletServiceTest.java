@@ -1,6 +1,5 @@
 package com.olamireDev.threelineswallet.service;
 
-import com.olamireDev.threelineswallet.constants.Currency;
 import com.olamireDev.threelineswallet.data.dto.GetWalletInfoResponseDTO;
 import com.olamireDev.threelineswallet.data.model.UserEntity;
 import com.olamireDev.threelineswallet.data.model.Wallet;
@@ -21,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import static com.olamireDev.threelineswallet.constants.Currency.NGN;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,7 +48,7 @@ class WalletServiceTest {
     @Test
     void createDefaultWalletForUser_whenWalletAlreadyExists_doesNotCreateNewWallet() {
         var user = UserEntity.builder().id(1L).name("Jane Doe").build();
-        when(walletRepository.existsByForUser_Id(1L)).thenReturn(true);
+        when(walletRepository.existsByForUser_IdAndCurrency(1L, NGN)).thenReturn(true);
 
         walletService.createDefaultWalletForUser(user);
 
@@ -58,7 +58,7 @@ class WalletServiceTest {
     @Test
     void createDefaultWalletForUser_whenNoWalletExists_createsWalletWithDefaults() {
         var user = UserEntity.builder().id(2L).name("John Smith").build();
-        when(walletRepository.existsByForUser_Id(2L)).thenReturn(false);
+        when(walletRepository.existsByForUser_IdAndCurrency(2L, NGN)).thenReturn(false);
         when(walletRepository.save(any(Wallet.class))).thenAnswer(inv -> inv.getArgument(0));
 
         walletService.createDefaultWalletForUser(user);
@@ -68,14 +68,14 @@ class WalletServiceTest {
 
         Wallet savedWallet = captor.getValue();
         assertThat(savedWallet.getForUser()).isEqualTo(user);
-        assertThat(savedWallet.getCurrency()).isEqualTo(Currency.NGN);
+        assertThat(savedWallet.getCurrency()).isEqualTo(NGN);
         assertThat(savedWallet.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
     void createDefaultWalletForUser_whenRepositoryThrows_propagatesException() {
         var user = UserEntity.builder().id(3L).name("Error User").build();
-        when(walletRepository.existsByForUser_Id(3L)).thenReturn(false);
+        when(walletRepository.existsByForUser_IdAndCurrency(3L, NGN)).thenReturn(false);
         when(walletRepository.save(any(Wallet.class))).thenThrow(new RuntimeException("db down"));
 
         assertThatThrownBy(() -> walletService.createDefaultWalletForUser(user))
@@ -90,22 +90,22 @@ class WalletServiceTest {
         var wallet = Wallet.builder()
                 .id(99L)
                 .balance(BigDecimal.valueOf(500))
-                .currency(Currency.NGN)
+                .currency(NGN)
                 .build();
-        when(walletRepository.findWalletByForUser_IdAndCurrency(10L, Currency.NGN))
+        when(walletRepository.findWalletByForUser_IdAndCurrency(10L, NGN))
                 .thenReturn(Optional.of(wallet));
 
         GetWalletInfoResponseDTO result = walletService.getUserDefaultWalletInfo();
 
         assertThat(result.walletId()).isEqualTo(99L);
         assertThat(result.balance()).isEqualByComparingTo(BigDecimal.valueOf(500));
-        assertThat(result.currency()).isEqualTo(Currency.NGN.getCurrencyName());
+        assertThat(result.currency()).isEqualTo(NGN.getCurrencyName());
     }
 
     @Test
     void getUserDefaultWalletInfo_whenNoWalletFound_throwsRuntimeException() {
         mockAuthenticatedUser("11");
-        when(walletRepository.findWalletByForUser_IdAndCurrency(11L, Currency.NGN))
+        when(walletRepository.findWalletByForUser_IdAndCurrency(11L, NGN))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> walletService.getUserDefaultWalletInfo())
