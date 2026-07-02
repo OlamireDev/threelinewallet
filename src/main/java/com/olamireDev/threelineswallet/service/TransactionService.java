@@ -60,7 +60,7 @@ public class TransactionService {
             }
 
             var userId = Long.parseLong(SecurityContextHolder.getContext().getAuthentication().getName());
-            if(userRepository.existsById(userId)) throw new RuntimeException("User not found");
+            if(!userRepository.existsById(userId)) throw new RuntimeException("User not found");
 
             //validate key
             var transactionKey = transactionKeyRepository.findByIdAndUser_IdAndTransactionKeyStateAndExpiryDateIsAfter(
@@ -70,14 +70,14 @@ public class TransactionService {
             transactionKey.setTransactionKeyState(TransactionKeyState.USED);
             transactionKey =transactionKeyRepository.save(transactionKey);
 
-            var debitWallet = walletRepository.findById(requestDTO.getUserWalletId())
+            var debitWallet = walletRepository.findByIdForTransaction(requestDTO.getUserWalletId())
                     .orElseThrow(() -> new RuntimeException("Failed Transaction: User wallet not found"));
 
             if(!debitWallet.getForUser().getId().equals(userId)){
                 throw new RuntimeException("Failed Transaction: User wallet does not belong to the user");
             }
 
-            var creditWallet = walletRepository.findById(requestDTO.getCreditedWalletId())
+            var creditWallet = walletRepository.findByIdForTransaction(requestDTO.getCreditedWalletId())
                     .orElseThrow(() -> new RuntimeException("Failed Transaction: Destination wallet not found"));
 
             if(!creditWallet.getCurrency().equals(debitWallet.getCurrency())){
@@ -96,7 +96,7 @@ public class TransactionService {
                     .primaryWallet(creditWallet)
                     .secondaryWallet(debitWallet)
                     .transactionKeyEntity(transactionKey)
-                    .transactionType(TransactionType.DEBIT)
+                    .transactionType(TransactionType.CREDIT)
                     .amount(requestDTO.getAmount())
                     .build());
 
@@ -117,8 +117,6 @@ public class TransactionService {
 
             return new TransactionResponseDTO(true,
                     Base64.getEncoder().encodeToString(debitTransaction.getId().toString().getBytes()));
-
-
         } catch (Exception e) {
             log.error("An error occurred while creating a transaction {}", e.getMessage(), e);
             throw e;
