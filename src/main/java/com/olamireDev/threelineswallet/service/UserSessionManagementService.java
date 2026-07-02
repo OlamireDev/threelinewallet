@@ -8,8 +8,8 @@ import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.olamireDev.threelineswallet.constants.ApplicationConstants.USERNAME;
 
@@ -20,7 +20,7 @@ public class UserSessionManagementService {
 
     private final TokenGenerationService tokenGenerationService;
 
-    private final Map<Long, String> sessionTokenMap = new HashMap<>();
+    private final Map<Long, String> sessionTokenMap = new ConcurrentHashMap<>();
 
     public Pair<String, Date> generateSessionToken(Long userId){
         var token = tokenGenerationService.encodeData(userId.toString(),

@@ -29,7 +29,7 @@ public class TransactionController {
         return ResponseEntity.ok(ApiResponse.success(transactionService.doUserTransaction(requestDTO)));
     }
 
-    @PostMapping("/history/{walletId}")
+    @GetMapping("/history/{walletId}")
     public ResponseEntity<ApiResponse<List<TransactionInfoResponseDTO>>> doDebitTransaction(@PathVariable Long walletId){
         return ResponseEntity.ok(ApiResponse.success(transactionService.getWalletTransactionHistory(walletId)));
     }

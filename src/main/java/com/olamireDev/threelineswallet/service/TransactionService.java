@@ -50,7 +50,7 @@ public class TransactionService {
         }
     }
 
-    @Transactional(noRollbackFor = Exception.class)
+    @Transactional
     public TransactionResponseDTO doUserTransaction(UserTransactionRequestDTO requestDTO){
         try{
             log.info("Creating a new transaction {}", requestDTO);

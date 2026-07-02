@@ -29,7 +29,8 @@ public class SecurityConfig {
     @Order(1)
     SecurityFilterChain publicChain(HttpSecurity http) {
         http
-                .securityMatcher("/api/v1/auth/**",
+                .securityMatcher("/api/v1/auth/**","/v3/api-docs/**",
+                        "/swagger-ui/**", "/swagger-ui.html",
                         "/error")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
