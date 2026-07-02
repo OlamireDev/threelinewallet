@@ -41,6 +41,7 @@ public class WalletService {
             if(Objects.isNull(userId)){
                 throw new RuntimeException("User is not logged in");
             }
+            log.info("Getting wallet info for user with id {}", userId);
             var walletOpt = walletRepository.findWalletByForUser_IdAndCurrency(userId, Currency.NGN);
             if(walletOpt.isEmpty()){
                 throw new RuntimeException("No NGN wallet for user with id " + userId);

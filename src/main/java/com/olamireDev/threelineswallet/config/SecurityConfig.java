@@ -1,7 +1,6 @@
 package com.olamireDev.threelineswallet.config;
 
 import com.olamireDev.threelineswallet.service.TokenGenerationService;
-import jakarta.servlet.ServletException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +17,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -29,7 +27,7 @@ public class SecurityConfig {
 
     @Bean
     @Order(1)
-    SecurityFilterChain publicChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain publicChain(HttpSecurity http) {
         http
                 .securityMatcher("/api/v1/auth/**",
                         "/error")
@@ -41,14 +39,14 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
-    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) throws Exception {
+    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) {
         var applicationFilter = new ApplicationFilter(tokenGenerationService);
         http
                 .securityMatcher("/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
-                .addFilterAfter(applicationFilter, BasicAuthenticationFilter.class);
+                .addFilterBefore(applicationFilter, BasicAuthenticationFilter.class);
         return http.build();
     }
 

@@ -1,7 +1,6 @@
 package com.olamireDev.threelineswallet.config;
 
 import com.olamireDev.threelineswallet.service.TokenGenerationService;
-import com.olamireDev.threelineswallet.service.WalletService;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,15 +8,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
@@ -27,23 +22,11 @@ public class ApplicationFilter extends OncePerRequestFilter {
 
     private final TokenGenerationService tokenGenerationService;
 
-    private Set<String> excludeUrls = Set.of("/error");
-
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        var servletRequest = (HttpServletRequest) request;
-        var servletResponse = (HttpServletResponse) response;
-
-    }
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
         log.info("Filtering request {}", request.getRequestURI());
-        if(excludeUrls.contains(request.getRequestURI())) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        var authHeader = response.getHeader(AUTHORIZATION);
+        var authHeader = request.getHeader(AUTHORIZATION);
         if(StringUtils.isBlank(authHeader)){
             log.error("Authorization header is empty");
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
@@ -51,7 +34,7 @@ public class ApplicationFilter extends OncePerRequestFilter {
         }
         var tokenValue = authHeader.replace("Bearer ", "");
         var claims = tokenGenerationService.decodeToken(tokenValue);
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(claims.getSubject(), List.of()));
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(claims.getSubject(),null,  List.of()));
         log.info("Authentication Success {}", request.getRequestURI());
         filterChain.doFilter(request, response);
     }

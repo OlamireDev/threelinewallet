@@ -32,6 +32,7 @@ public class Wallet {
     @JoinColumn(name = "for_user_id")
     private UserEntity forUser;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private Currency currency =  Currency.NGN;
 
