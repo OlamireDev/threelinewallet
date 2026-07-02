@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -29,6 +30,9 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String name;
+
+    @OneToMany
+    private List<Wallet> wallets;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

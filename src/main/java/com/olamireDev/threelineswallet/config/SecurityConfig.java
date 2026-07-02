@@ -1,15 +1,18 @@
 package com.olamireDev.threelineswallet.config;
 
+import com.olamireDev.threelineswallet.service.TokenGenerationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -23,18 +26,27 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain apiChain(HttpSecurity http) {
+    @Order(1)
+    SecurityFilterChain publicChain(HttpSecurity http) {
         http
+                .securityMatcher("/api/v1/auth/**",
+                        "/error")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v1/auth/**")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated()
-                );
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+        return http.build();
+    }
 
+    @Bean
+    @Order(2)
+    SecurityFilterChain apiChain(HttpSecurity http, TokenGenerationService tokenGenerationService) {
+        var applicationFilter = new ApplicationFilter(tokenGenerationService);
+        http
+                .securityMatcher("/**")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .addFilterBefore(applicationFilter, BasicAuthenticationFilter.class);
         return http.build();
     }
 

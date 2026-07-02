@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 import static com.olamireDev.threelineswallet.constants.ApplicationConstants.USERNAME;
 
@@ -27,6 +28,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     private final TokenGenerationService tokenGenerationService;
+
+    private final WalletService walletService;
 
     private final UserRepository userRepo;
 
@@ -47,6 +50,10 @@ public class AuthService {
 
             var tokenPair = tokenGenerationService.encodeData(newUser.getId().toString(),
                     Map.of(USERNAME.getValue(), newUser.getName()));
+
+            UserEntity finalNewUser = newUser;
+            CompletableFuture.runAsync(() ->
+                    walletService.createDefaultWalletForUser(finalNewUser));
 
             return LoginResponseDTO.builder()
                     .token(tokenPair.getFirst())
